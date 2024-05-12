@@ -1731,9 +1731,30 @@ void MandelbrotSet(MyComplex c, MyComplex z, float counter);
 #define MANDEL_DIS_Y 4
 
 
+uint16_t colorMap(int iteration) {
+    if (iteration == 1000) return tft.color565(0, 0, 0); // Black for inside
+    return tft.color565(iteration % 256, 0, 0); // Red gradient for outside
+}
+
+
+int mandelbrot(float x0, float y0, float limit) {
+    float x = 0.0;
+    float y = 0.0;
+    int iteration = 0;
+    int max_iteration = 1000;  // Increase for finer detail
+
+    while (x*x + y*y <= limit && iteration < max_iteration) {
+        float xtemp = x*x - y*y + x0;
+        y = 2*x*y + y0;
+        x = xtemp;
+        iteration++;
+    }
+
+    return iteration;
+}
 
 void loop_mandel() {
-  for (int i = 1; i < 10; i++) {
+  for (int i = 1; i < 100; i++) {
 
     // Iterate over every pixel according to scale on your display
     // float x_inc = 4.0;
@@ -1778,13 +1799,31 @@ void loop_mandel() {
       }
     }
     */
+    /*
     float z = 0.5;
     for (float px = -2 - (i * z) ; px < 2 + (i * z); px += MANDEL_INC_X / MANDEL_X) {
       for (float py = -1.5 - (i * z); py < 1.5 + (i * z); py += MANDEL_INC_Y / MANDEL_Y) {
         MyComplex c(px, py);
         // MyComplex z(0.1 * i, 0);
+        // MyComplex z(0, 0.1 * i);
         MyComplex z(0, 0);
         MandelbrotSet(c, z, 0);
+      }
+    }*/
+    float centerX = -0.5;  // Center of the view on the real axis
+    float centerY = 0;     // Center of the view on the imaginary axis
+    float scale1 = 0.01;   // Scale factor for zooming
+    float limit = 4.0; 
+    // float limit2 = limit - (limit / 10) * i;
+    float limit2 = limit - (limit / 2) * i;
+    float scale2 = scale1 - ( i * scale1 / 10);
+    for (int px = 0; px < MANDEL_X; px++) {
+      for (int py = 0; py < MANDEL_Y; py++) {
+        float x0 = (px - MANDEL_X / 2) * scale2 + centerX;
+        float y0 = (py - MANDEL_Y / 2) * scale2 + centerY;
+        int iteration = mandelbrot(x0, y0, limit2);
+        // tft.drawPixel(px, py, colorMap(iteration));
+        tft.drawPixel(px, py, colorMap(iteration));
       }
     }
     Serial.println("mandel loop - wait");
@@ -1818,7 +1857,7 @@ void MandelbrotSet(const MyComplex& c, const MyComplex& z, int counter) {
   if (counter >= 100) {
     int32_t displayX = (int32_t)((c.getReal() + 1.5) * (MANDEL_X / MANDEL_INC_X));
     int32_t displayY = (int32_t)((c.getImag() + 1) * (MANDEL_Y / MANDEL_INC_Y));
-    uint32_t color = tft.color565(255 * (z_new.magnitude() / 4), 0, 0);
+    uint32_t color = tft.color565(0, 255 * (z_new.magnitude() / 8), (255 - 255 * (z_new.magnitude())) / 8);
     tft.drawPixel(displayX, displayY, color);
     return;
   }
