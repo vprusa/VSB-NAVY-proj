@@ -1706,46 +1706,10 @@ void setup_mandel() {
   tft.setCursor(0, 0);
 }
 
-/*
-struct MyComplex {
-    float real;
-    float imag;
-};
-*/
-/*
-class MyComplex {
-private:
-    float real;
-    float imag;
+//void MandelbrotSet(float x, float y, float cx, float cy, float counter);
 
-public:
-    MyComplex(float r = 0.0, float i = 0.0) : real(r), imag(i) {}
-
-    // Method to add two complex numbers
-    MyComplex add(const MyComplex& other) const {
-        return MyComplex(real + other.real, imag + other.imag);
-    }
-
-    // Method to square the complex number
-    MyComplex square() const {
-        return MyComplex(real * real - imag * imag, 2 * real * imag);
-    }
-
-    // Method to calculate the magnitude of the complex number
-    float magnitude() const {
-        return sqrt(real * real + imag * imag);
-    }
-
-    // Getter methods for real and imaginary parts (optional if direct access is needed)
-    float getReal() const { return real; }
-    float getImag() const { return imag; }
-};
-*/
-
-//void Mandle(float x, float y, float cx, float cy, float counter);
-
-// void Mandle(MyComplex c, MyComplex z = {0, 0}, int counter = 0);
-void Mandle(MyComplex c, MyComplex z, float counter);
+// void MandelbrotSet(MyComplex c, MyComplex z = {0, 0}, int counter = 0);
+void MandelbrotSet(MyComplex c, MyComplex z, float counter);
 
 // #define MANDEL_INC_X 1.0
 // #define MANDEL_INC_Y (2.0/3.0)
@@ -1808,17 +1772,19 @@ void loop_mandel() {
     for (float x = xMin; x < xMax; x += xInc/MANDEL_X) {
       for (float y = yMin; y < yMax; y += yInc/MANDEL_Y) {
         // Serial.println("mandel loop - loop");
-        // Mandle(x, y, 0, 0, 0.0);
-        Mandle(c, t, 0.0);
-        // Mandle(y, x, 0, 0, 0);
+        // MandelbrotSet(x, y, 0, 0, 0.0);
+        MandelbrotSet(c, t, 0.0);
+        // MandelbrotSet(y, x, 0, 0, 0);
       }
     }
     */
-    for (float px = -2; px < 2; px += MANDEL_INC_X / MANDEL_X) {
-      for (float py = -1.5; py < 1.5; py += MANDEL_INC_Y / MANDEL_Y) {
+    float z = 0.5;
+    for (float px = -2 - (i * z) ; px < 2 + (i * z); px += MANDEL_INC_X / MANDEL_X) {
+      for (float py = -1.5 - (i * z); py < 1.5 + (i * z); py += MANDEL_INC_Y / MANDEL_Y) {
         MyComplex c(px, py);
+        // MyComplex z(0.1 * i, 0);
         MyComplex z(0, 0);
-        Mandle(c, z, 0);
+        MandelbrotSet(c, z, 0);
       }
     }
     Serial.println("mandel loop - wait");
@@ -1835,27 +1801,29 @@ float cabs(MyComplex c) {
 }
 */
 
-void Mandle(const MyComplex& c, const MyComplex& z, int counter) {
+void MandelbrotSet(const MyComplex& c, const MyComplex& z, int counter) {
   MyComplex z_new1 = z.square();
   MyComplex z_new = z_new1.add(c);
 
-  if (z_new.magnitude() > 2.0) {
-    int32_t displayX = (int32_t)((c.getReal() + 2) * (MANDEL_X / MANDEL_INC_X));
-    int32_t displayY = (int32_t)((c.getImag() + 1.5) * (MANDEL_Y / MANDEL_INC_Y));
-    uint32_t color = tft.color565(128 - 128 * z_new.magnitude() / 2, 128 - 128 * z_new.magnitude() / 2, 128 - 128 * z_new.magnitude() / 2);
+  if (z_new.magnitude() > 4.0) {
+    int32_t displayX = (int32_t)((c.getReal() + 1.5) * (MANDEL_X / MANDEL_INC_X));
+    int32_t displayY = (int32_t)((c.getImag() + 1) * (MANDEL_Y / MANDEL_INC_Y));
+    uint32_t color = tft.color565(128 - 128 * z_new.magnitude() / 2, 
+                                  128 - 128 * z_new.magnitude() / 2, 
+                                  128 - 128 * z_new.magnitude() / 2);
     tft.drawPixel(displayX, displayY, color);
     return;
   }
 
   if (counter >= 100) {
-    int32_t displayX = (int32_t)((c.getReal() + 2) * (MANDEL_X / MANDEL_INC_X));
-    int32_t displayY = (int32_t)((c.getImag() + 1.5) * (MANDEL_Y / MANDEL_INC_Y));
+    int32_t displayX = (int32_t)((c.getReal() + 1.5) * (MANDEL_X / MANDEL_INC_X));
+    int32_t displayY = (int32_t)((c.getImag() + 1) * (MANDEL_Y / MANDEL_INC_Y));
     uint32_t color = tft.color565(255 * (z_new.magnitude() / 4), 0, 0);
     tft.drawPixel(displayX, displayY, color);
     return;
   }
 
-  Mandle(c, z_new, counter + 1);
+  MandelbrotSet(c, z_new, counter + 1);
 }
 
 
